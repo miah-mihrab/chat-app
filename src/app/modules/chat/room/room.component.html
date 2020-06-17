@@ -1,0 +1,40 @@
+<div class="container border p-3" style="min-height: 100vh;">
+  <div class="row">
+    <div class="col-3">
+      <div class="row">
+        <div class="col-12 room_name">
+          Room: {{room}} <button class="btn btn-sm btn-primary" (click)="leaveRoom()">Leave</button>
+        </div>
+        <div class="col-12 online" style="max-height: 100vh; overflow-y: scroll;">
+          <ul class="list-group">
+            <li class="list-group-item" *ngFor="let data of usersInRoom">{{data.user}} <sub
+                class="text text-success">online</sub></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="col-9">
+      <div class="row">
+        <div class="col-12" style="height: 90vh;">
+          <div class="message card mb-2" *ngFor="let message of messages">
+            <div class="card-body">
+              <h6 class="card-title">{{message.user}}</h6>
+              <div class="card-text">{{message.message}}</div>
+            </div>
+          </div>
+        </div>
+        <hr>
+        <div class="col-12">
+
+          <form action="">
+            <div class="form-group">
+              <input type="text" class="form-control" name="message" [(ngModel)]="message" placeholder="Message">
+            </div>
+            <button class="btn btn-primary" type="submit" (click)="sendMessage()">Send</button>
+          </form>
+        </div>
+      </div>
+      <div class="messages"></div>
+    </div>
+  </div>
+</div>

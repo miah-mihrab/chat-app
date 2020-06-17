@@ -1,0 +1,13 @@
+@media screen and (min-width: 765px){
+  form{
+    max-width: 70%;
+    margin: auto;
+  }
+}
+@media screen and (min-width: 1024px){
+  form{
+    max-width: 50%;
+    margin: auto;
+  }
+}
+

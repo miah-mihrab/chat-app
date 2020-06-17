@@ -1,0 +1,13 @@
+<div class="container mt-4">
+  <h5 class="lead text-center mb-3">Welcome to chat-app!!</h5>
+  <form action="">
+    <div class="form-group">
+      <input type="text" class="form-control" placeholder="Username" name="user" [(ngModel)]="user">
+    </div>
+    <div class="form-group">
+      <input type="text" class="form-control" placeholder="Room" name="room" [(ngModel)]="room">
+    </div>
+
+    <button class="btn btn-primary" routerLink="/room" [queryParams]="{user: user, room: room}">Enter</button>
+  </form>
+</div>
