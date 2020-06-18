@@ -7,7 +7,8 @@
     "build": "ng build",
     "test": "ng test",
     "lint": "ng lint",
-    "e2e": "ng e2e"
+    "e2e": "ng e2e",
+    "server": "nodemon bin/www/app.js"
   },
   "private": true,
   "dependencies": {
@@ -19,13 +20,14 @@
     "@angular/platform-browser": "~9.0.2",
     "@angular/platform-browser-dynamic": "~9.0.2",
     "@angular/router": "~9.0.2",
+    "express": "^4.17.1",
+    "mongoose": "^5.9.19",
+    "nodemon": "^2.0.4",
     "rxjs": "~6.5.4",
+    "socket.io": "^2.3.0",
     "socket.io-client": "^2.3.0",
     "tslib": "^1.10.0",
-    "zone.js": "~0.10.2",
-    "express": "^4.17.1",
-    "nodemon": "^2.0.4",
-    "socket.io": "^2.3.0"
+    "zone.js": "~0.10.2"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "~0.900.3",

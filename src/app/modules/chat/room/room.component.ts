@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import * as io from 'socket.io-client';
 import { ActivatedRoute, Router } from '@angular/router';
+import { NgForm } from '@angular/forms';
 
 @Component({
   selector: 'app-room',
@@ -14,8 +15,10 @@ export class RoomComponent implements OnInit {
   room;
   user;
   messages: Array<{ user: string, message: string }> = [];
+  privateMessages: Array<{ user: string, message: string }> = [];
   usersInRoom: any;
-  message: string;
+  message: string = '';
+  privateRooms = [];
   constructor(private http: HttpClient, private aRoute: ActivatedRoute, private router: Router) {
     this.socket = io('http://localhost:4000');
 
@@ -24,14 +27,32 @@ export class RoomComponent implements OnInit {
       this.messages.push(data);
     })
     this.socket.on('left room', data => {
-      this.messages.push(data);
+      this.usersInRoom = data.online;
+      this.messages = data.messages ? data.messages : this.messages;
     })
     this.socket.on('usersInRoom', data => {
-      this.usersInRoom = data;
+      this.usersInRoom = data.online;
+      this.messages = data.messages
     })
 
     this.socket.on('message', data => {
       this.messages.push(data)
+    })
+
+    this.socket.on('createdPrivateRoom', data => {
+      console.log(data.room);
+      this.privateRooms.push(data.room);
+    })
+    this.socket.on('requestToJoinPrivateRoom', data => {
+      this.socket.emit('joinPrivateRoom', { room: data.room })
+    })
+    this.socket.on('joinedPrivateRoom', data => {
+      this.privateRooms.push(data.room);
+    })
+
+    this.socket.on('privateMessage', data => {
+      console.log(data, data.message)
+      this.privateMessages.push(data);
     })
   }
 
@@ -53,9 +74,17 @@ export class RoomComponent implements OnInit {
     this.router.navigate(['../'])
   }
 
-  sendMessage() {
-    console.log(this.message)
-    this.socket.emit('message', this.message);
+  sendMessage(form: NgForm) {
+    console.log(form)
+    this.socket.emit('message', form.value.message);
+    form.reset();
   }
 
+  privateRoom(targetId) {
+    this.socket.emit('makePrivateRoom', { targetId, message: this.message });
+  }
+  privateMessage(form: NgForm, id) {
+    console.log(form.value.message)
+    this.socket.emit('privateMessage', { room: id, message: form.value.message })
+  }
 }
