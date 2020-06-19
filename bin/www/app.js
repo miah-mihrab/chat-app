@@ -10,6 +10,7 @@ const users = require('./utils/users');
 
 const Users = require('../www/models/users');
 const Rooms = require('../www/models/rooms');
+const user = require('../www/models/users');
 let allMessage = [];
 
 async function joinRoom(socket, socketId, data, userId) {
@@ -87,7 +88,10 @@ io.of('/').on('connection', socket => {
     })
     await room.save();
 
-    if (user) {
+    if (data.room) {
+      io.to(data.room).emit('privateMessage', { user: users.currentUserWithSocketId(socket.id).user, message: data.message })
+    }
+    else if (user) {
       io.to(user.room).emit('message', { user: user.user, message: data });
     }
 
@@ -99,32 +103,41 @@ io.of('/').on('connection', socket => {
     let targetUser = users.currentUser(data.targetId);
 
     let roomName = `${current_user.userId}+${data.targetId}`;
-    // socket.emit('createdPrivateRoom', { room: roomName })
-    // console.log(targetUser.id)
-    console.log(roomName, "NEW ROOM")
-    socket.join(roomName);
 
-    // socket.to(targetUser.id).join(roomName)
-    // socket.emit('createdPrivateRoom', { room: roomName })
-    io.to(socket.id).emit('createdPrivateRoom', { room: roomName });
+
+    let findRoom = await Rooms.findOne({ name: roomName }) || await Rooms.findOne({ name: roomName.split('').reverse().join('') });
+    console.log(findRoom, "FIND")
+    if (!findRoom) {
+      let newRoom = new Rooms({
+        name: roomName,
+        users: [{ user: current_user.userId }, { user: targetUser.userId }]
+      })
+      await newRoom.save();
+    }
+    let messages = (findRoom && findRoom._id) ? findRoom.messages : []
+    socket.join(roomName);
+    io.to(socket.id).emit('createdPrivateRoom', { room: roomName, messages });
     io.to(targetUser.id).emit('requestToJoinPrivateRoom', { room: roomName })
-    // io.to(socket.id).to(targetUser.id).emit('createdPrivateRoom', { room: roomName })
-    // io.sockets.socket(socket.id).emit('createdPrivateRoom', { room: roomName });
   })
 
 
   socket.on('joinPrivateRoom', async data => {
+    let room = await Rooms.findOne({ name: data.room }) || await Rooms.findOne({ name: data.room.split('').reverse().join('') });
+    let messages = room.messages;
     socket.join(data.room);
-    socket.emit('joinedPrivateRoom', { room: data.room })
+    socket.emit('joinedPrivateRoom', { room: data.room, messages })
+    // socket.emit('joinedPrivateRoom', { room: data.room })
   })
 
   socket.on('privateMessage', async data => {
-    let ids = data.room.split('+');
-    let userOne = users.currentUser(ids[0]);
-    let userTwo = users.currentUser(ids[1]);
-
-    socket.broadcast.to(data.room).emit('privateMessage', { user: users.currentUserWithSocketId(socket.id).user, message: data.message })
-    // io.to(data.room).emit('privateMessage', { user: users.currentUserWithSocketId(socket.id).user, message: data.message })
+    let room = await Rooms.findOne({ name: data.room });
+    room.messages.push({ user: users.currentUserWithSocketId(socket.id).user, message: data.message });
+    await room.save();
+    io.to(data.room).emit('privateMessage',
+      {
+        message: { user: users.currentUserWithSocketId(socket.id).user, message: data.message },
+        room: data.room
+      })
   })
 
 
@@ -157,3 +170,5 @@ http.listen(PORT, console.log(`Server Up and Running`));
 //     |
 //     |______id
 //     |______name(userOne+userTwo)
+//     |______users[]
+//     |______messages[]

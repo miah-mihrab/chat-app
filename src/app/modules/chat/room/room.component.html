@@ -43,7 +43,7 @@
   <ng-container *ngFor="let id of privateRooms">
     <div class="col-3 border mr-2" [attr.id]="id">
       <div class="messages" style="height: 200px;">
-        <div class="card mb-2 p-2" *ngFor="let msg of privateMessages">
+        <div class="card mb-2 p-2" *ngFor="let msg of privateMessages[id]">
           <div class="card-text" *ngIf="msg.user">{{msg.user}}: {{msg.message}}</div>
         </div>
       </div>

@@ -15,7 +15,7 @@ export class RoomComponent implements OnInit {
   room;
   user;
   messages: Array<{ user: string, message: string }> = [];
-  privateMessages: Array<{ user: string, message: string }> = [];
+  privateMessages = [];
   usersInRoom: any;
   message: string = '';
   privateRooms = [];
@@ -40,19 +40,25 @@ export class RoomComponent implements OnInit {
     })
 
     this.socket.on('createdPrivateRoom', data => {
-      console.log(data.room);
       this.privateRooms.push(data.room);
+      this.privateMessages[data.room] = data.messages;
     })
     this.socket.on('requestToJoinPrivateRoom', data => {
       this.socket.emit('joinPrivateRoom', { room: data.room })
     })
     this.socket.on('joinedPrivateRoom', data => {
       this.privateRooms.push(data.room);
+      this.privateMessages[data.room] = data.messages;
     })
 
     this.socket.on('privateMessage', data => {
       console.log(data, data.message)
-      this.privateMessages.push(data);
+      let room = data.room;
+      let messagesInRoom = this.privateMessages[room] ? this.privateMessages[room] : [];
+      messagesInRoom.push(data.message);
+      this.privateMessages[room] = messagesInRoom;
+      console.log(this.privateMessages)
+      // this.privateMessages.push(data);
     })
   }
 
@@ -66,7 +72,6 @@ export class RoomComponent implements OnInit {
 
   joinRoom() {
     this.socket.emit('join', { user: this.user, room: this.room });
-
   }
 
   leaveRoom() {
@@ -84,7 +89,6 @@ export class RoomComponent implements OnInit {
     this.socket.emit('makePrivateRoom', { targetId, message: this.message });
   }
   privateMessage(form: NgForm, id) {
-    console.log(form.value.message)
     this.socket.emit('privateMessage', { room: id, message: form.value.message })
   }
 }
