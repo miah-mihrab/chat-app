@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import * as io from 'socket.io-client';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NgForm } from '@angular/forms';
+import { Title } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-room',
@@ -19,11 +20,35 @@ export class RoomComponent implements OnInit {
   usersInRoom: any;
   message: string = '';
   privateRooms = [];
-  constructor(private http: HttpClient, private aRoute: ActivatedRoute, private router: Router) {
+  newMessage = 0;
+  title: 'Chat App'
+
+
+  hidden;
+  visibilityChange;
+
+
+  constructor(private titleAngular: Title, private aRoute: ActivatedRoute, private router: Router) {
     this.socket = io('http://localhost:4000');
 
+    if (typeof document.hidden !== "undefined") { // Opera 12.10 and Firefox 18 and later support
+      this.hidden = "hidden";
+      this.visibilityChange = "visibilitychange";
+    }
+
+    document.addEventListener(this.visibilityChange, () => {
+      console.log("IN")
+      if (!document.hidden) {
+        console.log('SIDE')
+        this.newMessage = 0;
+        titleAngular.setTitle(`Chat App`)
+      }
+    });
+
+
+
     this.socket.on('joined', data => {
-      console.log(data)
+      console.log(data, "DAAAAta")
       this.messages.push(data);
     })
     this.socket.on('left room', data => {
@@ -37,17 +62,24 @@ export class RoomComponent implements OnInit {
 
     this.socket.on('message', data => {
       this.messages.push(data)
+      if (data.new_message && document.hidden) {
+        this.newMessage++; titleAngular.setTitle(`Chat App (${this.newMessage})`)
+      }
     })
 
     this.socket.on('createdPrivateRoom', data => {
-      this.privateRooms.push(data.room);
+      console.log(data, "JOINED")
+
+      this.privateRooms.push({ id: data.room, targetUser: data.targetUser });
       this.privateMessages[data.room] = data.messages;
     })
     this.socket.on('requestToJoinPrivateRoom', data => {
-      this.socket.emit('joinPrivateRoom', { room: data.room })
+      console.log("DATA", data)
+      this.socket.emit('joinPrivateRoom', { room: data.room, targetUser: data.targetUser })
     })
     this.socket.on('joinedPrivateRoom', data => {
-      this.privateRooms.push(data.room);
+      console.log(data, "JOINED")
+      this.privateRooms.push({ id: data.room, targetUser: data.targetUser });
       this.privateMessages[data.room] = data.messages;
     })
 
@@ -57,8 +89,9 @@ export class RoomComponent implements OnInit {
       let messagesInRoom = this.privateMessages[room] ? this.privateMessages[room] : [];
       messagesInRoom.push(data.message);
       this.privateMessages[room] = messagesInRoom;
-      console.log(this.privateMessages)
-      // this.privateMessages.push(data);
+      if (data.new_message && document.hidden) {
+        this.newMessage++; titleAngular.setTitle(`Chat App (${this.newMessage})`)
+      }
     })
   }
 
@@ -79,9 +112,9 @@ export class RoomComponent implements OnInit {
     this.router.navigate(['../'])
   }
 
-  sendMessage(form: NgForm) {
+  sendMessage(form: NgForm, room) {
     console.log(form)
-    this.socket.emit('message', form.value.message);
+    this.socket.emit('message', { message: form.value.message, room });
     form.reset();
   }
 
@@ -89,6 +122,7 @@ export class RoomComponent implements OnInit {
     this.socket.emit('makePrivateRoom', { targetId, message: this.message });
   }
   privateMessage(form: NgForm, id) {
+    console.log(form.value)
     this.socket.emit('privateMessage', { room: id, message: form.value.message })
   }
 }

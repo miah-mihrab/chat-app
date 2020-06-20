@@ -18,7 +18,7 @@
         <div class="col-12 mb-3" style="max-height: 80vh; overflow-y: auto;">
           <div class="message card mb-2" *ngFor="let message of messages">
             <div class="card-body">
-              <h6 class="card-title">{{message.user}}</h6>
+              <h6 class="card-title">{{message.user}} <sub>{{message['message_time'] | date: 'short'}}</sub></h6>
               <div class="card-text">{{message.message}}</div>
             </div>
           </div>
@@ -30,7 +30,7 @@
             <div class="form-group">
               <input type="text" class="form-control" name="message" [ngModel]="message" placeholder="Message">
             </div>
-            <button class="btn btn-primary" type="submit" (click)="sendMessage(f)">Send</button>
+            <button class="btn btn-primary" type="submit" (click)="sendMessage(f, room)">Send</button>
           </form>
         </div>
       </div>
@@ -39,22 +39,31 @@
 </div>
 
 
-<div class="row">
-  <ng-container *ngFor="let id of privateRooms">
-    <div class="col-3 border mr-2" [attr.id]="id">
-      <div class="messages" style="height: 200px;">
-        <div class="card mb-2 p-2" *ngFor="let msg of privateMessages[id]">
-          <div class="card-text" *ngIf="msg.user">{{msg.user}}: {{msg.message}}</div>
+<div class="row p-3">
+  <ng-container *ngFor="let prm of privateRooms">
+    <div class="col-3" style="height: 400px;">
+      <div class="card" style="width: 18rem; height: 100%; overflow: hidden;">
+        <div class="card-header">{{prm.targetUser}}</div>
+        <div class="card-body" style="height: 70% !important; overflow-y: auto;">
+          <ng-container *ngFor="let msg of privateMessages[prm.id]">
+            <p class="card-text bg bg-secondary rounded pl-1 pt-2 pb-2">{{msg.user}}: {{msg.message}}
+              <br><span>{{msg.message_time | date: 'short'}}</span>
+            </p>
+          </ng-container>
+        </div>
+        <div class="card-footer bg bg-secondary" style="height: 20%;">
+          <form action="" #pm="ngForm">
+            <div class="input-group">
+              <input type="text" class="form-control" name="message" [ngModel]="message" placeholder="Message">
+              <div class="input-group-prepend" (click)="privateMessage(pm, prm.id)" style="cursor: pointer;">
+                <div class="input-group-text bg bg-primary">send</div>
+              </div>
+            </div>
+
+          </form>
         </div>
       </div>
-      <div>
-        <form action="" #pm="ngForm">
-          <div class="form-group">
-            <input type="text" class="form-control" name="message" [ngModel]="message" placeholder="Message">
-          </div>
-          <button class="btn btn-sm btn-secondary" (click)="privateMessage(pm, id)">Send</button>
-        </form>
-      </div>
     </div>
+
   </ng-container>
 </div>

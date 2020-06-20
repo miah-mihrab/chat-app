@@ -1,1 +1,5 @@
 @import "https://stackpath.bootstrapcdn.com/bootswatch/4.5.0/darkly/bootstrap.min.css";
+
+*{
+  box-sizing: border-box;
+}
