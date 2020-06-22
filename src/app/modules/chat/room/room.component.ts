@@ -22,10 +22,11 @@ export class RoomComponent implements OnInit {
   privateRooms = [];
   newMessage = 0;
   title: 'Chat App'
-
+  dataUrl = '';
 
   hidden;
   visibilityChange;
+  file: any;
 
 
   constructor(private titleAngular: Title, private aRoute: ActivatedRoute, private router: Router) {
@@ -37,9 +38,7 @@ export class RoomComponent implements OnInit {
     }
 
     document.addEventListener(this.visibilityChange, () => {
-      console.log("IN")
       if (!document.hidden) {
-        console.log('SIDE')
         this.newMessage = 0;
         titleAngular.setTitle(`Chat App`)
       }
@@ -113,8 +112,8 @@ export class RoomComponent implements OnInit {
   }
 
   sendMessage(form: NgForm, room) {
-    console.log(form)
-    this.socket.emit('message', { message: form.value.message, room });
+    console.log(this.dataUrl)
+    this.socket.emit('message', { message: form.value.message, room, file: this.dataUrl });
     form.reset();
   }
 
@@ -124,5 +123,20 @@ export class RoomComponent implements OnInit {
   privateMessage(form: NgForm, id) {
     console.log(form.value)
     this.socket.emit('privateMessage', { room: id, message: form.value.message })
+  }
+
+  fileAdded(fl) {
+    this.file = fl.target.files[0]
+    const reader = new FileReader();
+    let dataUrl;
+    reader.addEventListener("load", () => {
+      this.dataUrl = (<string>reader.result).split('data:image/jpeg;base64,')[1] || (<string>reader.result).split('data:image/jpg;base64,')[1] || (<string>reader.result).split('data:image/png;base64,')[1]
+      return dataUrl;
+    }, false);
+
+    if (this.file) {
+      reader.readAsDataURL(this.file);
+      console.log(this.dataUrl)
+    }
   }
 }

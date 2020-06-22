@@ -106,13 +106,14 @@ io.of('/').on('connection', socket => {
     await room.messages.push({
       user: user.user,
       message: data.message,
+      file: data.file,
       message_time: time
     })
     await room.save();
 
     if (user) {
       // @Emit the message to the specific room
-      io.to(data.room).emit('message', { user: user.user, message: data.message, message_time: time, new_message: true });
+      io.to(data.room).emit('message', { user: user.user, message: data.message, file: data.file, message_time: time, new_message: true });
     }
 
   })
